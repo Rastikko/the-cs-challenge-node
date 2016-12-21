@@ -1,0 +1,22 @@
+{
+  "name": "the-cs-challenge-node",
+  "version": "1.0.0",
+  "description": "\"# the-cs-challenge-node\"",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Rastikko/the-cs-challenge-node.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Rastikko/the-cs-challenge-node/issues"
+  },
+  "homepage": "https://github.com/Rastikko/the-cs-challenge-node#readme",
+  "dependencies": {
+    "firebase-admin": "^4.0.4"
+  }
+}
