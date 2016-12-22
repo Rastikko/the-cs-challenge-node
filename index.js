@@ -58,6 +58,23 @@ function handleNewGame(gameSnapshot) {
     });
 }
 
+function handleFinishedGame(gameSnapshot) {
+    gamesRef.child(`${gameSnapshot.key}`).update({
+        finishedTime: new Date()
+    });
+    // TODO: copy to oldGames
+}
+
+function handleGameUpdate(gameSnapshot) {
+    let game = gameSnapshot.val();
+    if (game.state === 'NEW') {
+        return handleNewGame(gameSnapshot);
+    }
+    if (game.state === 'FINISHED' && !game.finishedTime) {
+        return handleFinishedGame(gameSnapshot);
+    }
+}
+
 /**
  * User questions handlers
  */
@@ -92,21 +109,8 @@ function handleUserQuestionsUpdates(snapshot) {
     }
 }
 
-gamesRef.on('child_added', function(snapshot) {
-  let newGame = snapshot.val();
-  if (newGame.state === 'NEW') {
-      handleNewGame(snapshot);
-  }
-});
-
-// TODO: set game finished here
-
-gamesRef.on('child_changed', function(snapshot) {
-  let game = snapshot.val();
-  if (game.state === 'FINISHED') {
-      console.log('GAME FINISHED!');
-  }
-});
+gamesRef.on('child_added', handleGameUpdate);
+gamesRef.on('child_changed', handleGameUpdate);
 
 userQuestionsRef.on('child_added', handleUserQuestionsUpdates);
 userQuestionsRef.on('child_changed', handleUserQuestionsUpdates);

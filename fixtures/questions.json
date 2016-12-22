@@ -1,20 +1,38 @@
 [
   {
-    "title": "what is 1 + 1",
+    "title": "If an array based list starts out with a capacity of 8 and has a double the capacity growth policy, what is the capacity of the list after 24 elemetns have been added to it.",
     "answers": [
-      { "title": "1", "correct": false },
-      { "title": "2", "correct": true },
-      { "title": "3", "correct": false },
-      { "title": "4", "correct": false }
+      { "title": "16", "correct": false },
+      { "title": "24", "correct": false },
+      { "title": "32", "correct": true },
+      { "title": "48", "correct": false }
     ]
   },
   {
-    "title": "what is 1 + 2",
+    "title": "We are implementing a FIFO queue using an ArrayList. To enqueue an element, we add to the back of the list. To dequeue we remove the element at index 0. The enqueue and dequeue operations take respectively (on average):",
     "answers": [
-      { "title": "1", "correct": false },
-      { "title": "2", "correct": false },
-      { "title": "3", "correct": true },
-      { "title": "4", "correct": false }
+      { "title": "O(1) and O(1) time", "correct": false },
+      { "title": "O(n) and O(n) time", "correct": false },
+      { "title": "O(1) and O(n) time", "correct": true },
+      { "title": "O(n) and O(1) time", "correct": false }
+    ]
+  },
+  {
+    "title": "Priority queues are implemented using an array representation of a",
+    "answers": [
+      { "title": "Binary Tree", "correct": false },
+      { "title": "Binary Heap", "correct": true },
+      { "title": "Binary Search", "correct": false },
+      { "title": "Binary List", "correct": false }
+    ]
+  },
+  {
+    "title": "Using recursive binary search we can find an element in a sorted array very fast, but recursion will likely run out of stack memory if the array size gets larger than around",
+    "answers": [
+      { "title": "10 thousand elements", "correct": false },
+      { "title": "10 million elements", "correct": false },
+      { "title": "10 billion elements", "correct": false },
+      { "title": "None of the above", "correct": true }
     ]
   },
   {
@@ -24,6 +42,15 @@
       { "title": "Insertion and Merge sort", "correct": true },
       { "title": "Selection and Heap sort", "correct": false },
       { "title": "Insertion and Quick sort", "correct": false }
+    ]
+  },
+  {
+    "title": "Binary search in an unsorted array:",
+    "answers": [
+      { "title": "Will not find a value that may be present.", "correct": false },
+      { "title": "Will find a value that is present but will take as long as linear search.", "correct": false },
+      { "title": "May find a value that is present or may not.", "correct": true },
+      { "title": "May incorrectly find a value that is not present.", "correct": false }
     ]
   }
 ]
