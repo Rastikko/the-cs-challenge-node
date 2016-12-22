@@ -93,9 +93,18 @@ function handleUserQuestionsUpdates(snapshot) {
 }
 
 gamesRef.on('child_added', function(snapshot) {
-  var newGame = snapshot.val();
+  let newGame = snapshot.val();
   if (newGame.state === 'NEW') {
       handleNewGame(snapshot);
+  }
+});
+
+// TODO: set game finished here
+
+gamesRef.on('child_changed', function(snapshot) {
+  let game = snapshot.val();
+  if (game.state === 'FINISHED') {
+      console.log('GAME FINISHED!');
   }
 });
 
