@@ -10,8 +10,12 @@ const db = firebaseAdmin.database();
 
 const gamesRef = db.ref("games");
 const questionsRef = db.ref("questions");
+const answersRef = db.ref("answers");
 const userQuestionsRef = db.ref("userQuestions");
 
+/**
+ * Retrieve data
+ */
 function getQuestionsKeys() {
     return new Promise(function(resolve) {
         questionsRef.once('value', function(snapshot) {
@@ -21,6 +25,18 @@ function getQuestionsKeys() {
     });
 }
 
+function getAnswer(answernKey) {
+    return new Promise(function(resolve) {
+        answersRef.child(answernKey).once('value', function(snapshot) {
+            // TODO: Pick some random instead of all
+            resolve(snapshot.val());
+        });
+    });
+}
+
+/**
+ * Game handlers
+ */
 function createUserQuestions(questionKeys, uid) {
     let updates = {};
     let userQuestionKeys = {};
@@ -42,14 +58,38 @@ function handleNewGame(gameSnapshot) {
     });
 }
 
-function handleAnswer() {
-    // Change state to DONE
-    // add correct field to userQuestions
-    // set endTime property
+/**
+ * User questions handlers
+ */
+function handleUserQuestionAnswer(userQuestionSnapshot) {
+    console.log('handleAnswer', userQuestionSnapshot.answer);
+    getAnswer(userQuestionSnapshot.val().answer).then(function(answer) {
+        userQuestionsRef.child(`${userQuestionSnapshot.key}`).update({
+            endTime: new Date,
+            state: 'ANSWERED',
+            // TODO: calculate score instead
+            correct: answer.correct ? 'YES' : 'NO'
+        });
+    });
 }
 
-function handleStartedQuestion() {
-    // add startTime
+function handleUserQuestionStarted(userQuestionSnapshot) {
+    userQuestionsRef.child(`${userQuestionSnapshot.key}`).update({
+        startTime: new Date()
+    });
+}
+
+function handleUserQuestionsUpdates(snapshot) {
+    const changedQuestion = snapshot.val();
+    const startedQuestion = changedQuestion.state === 'STARTED';
+
+    if (startedQuestion && !changedQuestion.startTime) {
+        return handleUserQuestionStarted(snapshot);
+    }
+
+    if (startedQuestion && changedQuestion.answer) {
+        return handleUserQuestionAnswer(snapshot);
+    }
 }
 
 gamesRef.on('child_added', function(snapshot) {
@@ -59,4 +99,5 @@ gamesRef.on('child_added', function(snapshot) {
   }
 });
 
-userQuestionsRef.on('')
+userQuestionsRef.on('child_added', handleUserQuestionsUpdates);
+userQuestionsRef.on('child_changed', handleUserQuestionsUpdates);

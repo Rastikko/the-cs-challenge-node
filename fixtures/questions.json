@@ -16,5 +16,14 @@
       { "title": "3", "correct": true },
       { "title": "4", "correct": false }
     ]
+  },
+  {
+    "title": "What of the following sorts are stable sorts (equal keys appear in the same order in sorted output as they appear in the input unsorted array)",
+    "answers": [
+      { "title": "Selection and Quick sort", "correct": false },
+      { "title": "Insertion and Merge sort", "correct": true },
+      { "title": "Selection and Heap sort", "correct": false },
+      { "title": "Insertion and Quick sort", "correct": false }
+    ]
   }
 ]
