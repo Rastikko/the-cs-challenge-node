@@ -9,6 +9,7 @@ firebaseAdmin.initializeApp({
 const db = firebaseAdmin.database();
 
 const gamesRef = db.ref("games");
+const oldGamesRef = db.ref("oldGames");
 const questionsRef = db.ref("questions");
 const answersRef = db.ref("answers");
 const userQuestionsRef = db.ref("userQuestions");
@@ -44,6 +45,7 @@ function createUserQuestions(questionKeys, uid) {
         let newUserQuestionKey = userQuestionsRef.push().key;
         updates[`/userQuestions/${newUserQuestionKey}/state`] = 'NONE';
         updates[`/userQuestions/${newUserQuestionKey}/question`] = questionKey;
+        updates[`/userQuestions/${newUserQuestionKey}/uid`] = uid;
         userQuestionKeys[newUserQuestionKey] = true;
     });
     return { updates, userQuestionKeys };
@@ -59,10 +61,18 @@ function handleNewGame(gameSnapshot) {
 }
 
 function handleFinishedGame(gameSnapshot) {
+    let finishedTime = new Date();
     gamesRef.child(`${gameSnapshot.key}`).update({
         finishedTime: new Date()
     });
-    // TODO: copy to oldGames
+
+    oldGamesRef.push().set({
+        uid: gameSnapshot.key,
+        answeredUserQuestions: gameSnapshot.val().answeredUserQuestions,
+        gameEndTime: finishedTime
+    });
+
+    // TODO: delete non responded user questions gameSnapshot.val().userQuestions
 }
 
 function handleGameUpdate(gameSnapshot) {
@@ -78,14 +88,70 @@ function handleGameUpdate(gameSnapshot) {
 /**
  * User questions handlers
  */
+
+function updateQuestionData(questionKey, userQuestionKey) {
+
+    questionsRef.child(questionKey).once('value', function(questionSnapshot) {
+        userQuestionsRef.child(userQuestionKey).once('value', function(userQuestionSnapshot) {
+            let question = questionSnapshot.val();
+            let userQuestion = userQuestionSnapshot.val();
+
+            let totalAnswers = question.totalAnswers;
+            let totalCorrectAnswers = question.totalCorrectAnswers;
+            let endTime = new Date(userQuestion.endTime);
+            let startTime = new Date(userQuestion.startTime);
+            let timeDiff = Math.abs(endTime.getTime() - startTime.getTime());
+            // We only account up to 40 seconds
+            timeDiff = Math.min(timeDiff, 40000);
+            let totalCorrectTime = question.totalCorrectTime;
+            let averageCorrectTime = (totalCorrectAnswers === 0) ? 40000 : totalCorrectTime / totalCorrectAnswers;
+            
+            let score;
+            if (userQuestion.correct === 'YES') {
+                score = (totalAnswers === 0) ? 200 : 100 * (2 - totalCorrectAnswers / totalAnswers);
+                if (timeDiff < averageCorrectTime) {
+                    score += 30 * (2 - timeDiff / averageCorrectTime);
+                }
+            } else {
+                score = 0;
+            }
+
+            totalAnswers += 1;
+            totalCorrectAnswers += (userQuestion.correct === 'YES') ? 1 : 0;
+            totalCorrectTime += (userQuestion.correct === 'YES') ? timeDiff : 0;
+            let updates = {};
+
+            updates[`questions/${questionKey}/totalAnswers`] = totalAnswers;
+            updates[`questions/${questionKey}/totalCorrectAnswers`] = totalCorrectAnswers;
+            updates[`questions/${questionKey}/totalCorrectTime`] = totalCorrectTime;
+            updates[`userQuestions/${userQuestionKey}/score`] = Math.abs(score);
+
+            db.ref().update(updates);
+        });
+    });
+}
+
 function handleUserQuestionAnswer(userQuestionSnapshot) {
-    console.log('handleAnswer', userQuestionSnapshot.answer);
     getAnswer(userQuestionSnapshot.val().answer).then(function(answer) {
+        let endTime = new Date();
         userQuestionsRef.child(`${userQuestionSnapshot.key}`).update({
-            endTime: new Date,
+            endTime: endTime,
             state: 'ANSWERED',
-            // TODO: calculate score instead
+            // TODO: calculate also the score
             correct: answer.correct ? 'YES' : 'NO'
+        });
+
+        
+        let updates = {};
+
+        updates[`/games/${userQuestionSnapshot.val().uid}/answeredUserQuestions/${userQuestionSnapshot.key}`] = true;
+
+        if (!answer.correct) {
+           updates[`/games/${userQuestionSnapshot.val().uid}/state/`] = 'FINISHED';
+        }
+
+        db.ref().update(updates, function() {
+            updateQuestionData(userQuestionSnapshot.val().question, userQuestionSnapshot.key);
         });
     });
 }

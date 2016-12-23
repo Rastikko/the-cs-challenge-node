@@ -21,6 +21,9 @@ questions.forEach(function(question) {
   
   let newQuestionkey = db.ref().child('questions').push().key;
   question.answers = awnsers;
+  question.totalAnswers = 0;
+  question.totalCorrectAnswers = 0;
+  question.totalCorrectTime = 0;
   updates[`/questions/${newQuestionkey}`] = question;
   return db.ref().update(updates);
 });
