@@ -56,6 +56,7 @@ function handleNewGame(gameSnapshot) {
         let {updates, userQuestionKeys} = createUserQuestions(questionKeys, gameSnapshot.val().uid);
         updates[`/games/${gameSnapshot.key}/state`] = 'INPROGRESS';
         updates[`/games/${gameSnapshot.key}/userQuestions`] = userQuestionKeys;
+        updates[`/games/${gameSnapshot.key}/currentUserQuestion`] = Object.keys(userQuestionKeys)[0];
         db.ref().update(updates);
     });
 }
@@ -124,7 +125,7 @@ function updateQuestionData(questionKey, userQuestionKey) {
             updates[`questions/${questionKey}/totalAnswers`] = totalAnswers;
             updates[`questions/${questionKey}/totalCorrectAnswers`] = totalCorrectAnswers;
             updates[`questions/${questionKey}/totalCorrectTime`] = totalCorrectTime;
-            updates[`userQuestions/${userQuestionKey}/score`] = Math.abs(score);
+            updates[`userQuestions/${userQuestionKey}/score`] = Math.round(score);
 
             db.ref().update(updates);
         });
@@ -146,12 +147,33 @@ function handleUserQuestionAnswer(userQuestionSnapshot) {
 
         updates[`/games/${userQuestionSnapshot.val().uid}/answeredUserQuestions/${userQuestionSnapshot.key}`] = true;
 
+        let currentUserQuestionPromise = Promise.resolve(false);
+
         if (!answer.correct) {
-           updates[`/games/${userQuestionSnapshot.val().uid}/state/`] = 'FINISHED';
+            updates[`/games/${userQuestionSnapshot.val().uid}/state`] = 'FINISHED';
+            // updates[`/games/${userQuestionSnapshot.val().uid}/currentUserQuestion`] = false;
+        } else {
+            currentUserQuestionPromise = new Promise(function(resolve) {
+                gamesRef.child(`${userQuestionSnapshot.val().uid}`).once('value', function(gameSnapshot) {
+                    let game = gameSnapshot.val();
+                    let currentUserQuestion = game.currentUserQuestion;
+                    let userQuestionsArray = Object.keys(game.userQuestions);
+
+                    let indexOfCurrentUserQuestion = userQuestionsArray.indexOf(currentUserQuestion);
+                    if (indexOfCurrentUserQuestion < userQuestionsArray.length - 1) {
+                        resolve(userQuestionsArray[indexOfCurrentUserQuestion + 1]);
+                    } else {
+                        resolve(false);
+                    }
+                });
+            });
         }
 
-        db.ref().update(updates, function() {
-            updateQuestionData(userQuestionSnapshot.val().question, userQuestionSnapshot.key);
+        currentUserQuestionPromise.then(function(currentUserQuestion) {
+            updates[`/games/${userQuestionSnapshot.val().uid}/currentUserQuestion`] = currentUserQuestion;
+            db.ref().update(updates, function() {
+                updateQuestionData(userQuestionSnapshot.val().question, userQuestionSnapshot.key);
+            });
         });
     });
 }
