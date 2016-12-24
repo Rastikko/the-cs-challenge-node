@@ -15,6 +15,8 @@ const answersRef = db.ref("answers");
 const userQuestionsRef = db.ref("userQuestions");
 const scoresRef = db.ref("scores");
 
+const MAX_QUESTION_TIME = 70000;
+
 /**
  * Randomize array element order in-place.
  * Using Durstenfeld shuffle algorithm.
@@ -155,10 +157,9 @@ function updateQuestionData(questionKey, userQuestionKey) {
             let endTime = new Date(userQuestion.endTime);
             let startTime = new Date(userQuestion.startTime);
             let timeDiff = Math.abs(endTime.getTime() - startTime.getTime());
-            // We only account up to 40 seconds
-            timeDiff = Math.min(timeDiff, 40000);
+            timeDiff = Math.min(timeDiff, MAX_QUESTION_TIME);
             let totalCorrectTime = question.totalCorrectTime;
-            let averageCorrectTime = (totalCorrectAnswers === 0) ? 40000 : totalCorrectTime / totalCorrectAnswers;
+            let averageCorrectTime = (totalCorrectAnswers === 0) ? MAX_QUESTION_TIME : totalCorrectTime / totalCorrectAnswers;
             
             let score;
             if (userQuestion.correct === 'YES') {
@@ -188,13 +189,14 @@ function updateQuestionData(questionKey, userQuestionKey) {
 function handleUserQuestionAnswer(userQuestionSnapshot) {
     getAnswer(userQuestionSnapshot.val().answer).then(function(answer) {
         let endTime = new Date();
+
+        // TODO: if the question is over the timeout fail it.
+
         userQuestionsRef.child(`${userQuestionSnapshot.key}`).update({
             endTime: endTime,
             state: 'ANSWERED',
-            // TODO: calculate also the score
             correct: answer.correct ? 'YES' : 'NO'
         });
-
         
         let updates = {};
 

@@ -25,5 +25,7 @@ questions.forEach(function(question) {
   question.totalCorrectAnswers = 0;
   question.totalCorrectTime = 0;
   updates[`/questions/${newQuestionkey}`] = question;
+  // add a little hack to answer a question with a timeout
+  updates['/answers/timeout-answer-id/correct'] = false;
   return db.ref().update(updates);
 });
