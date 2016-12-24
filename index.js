@@ -147,11 +147,10 @@ function handleUserQuestionAnswer(userQuestionSnapshot) {
 
         updates[`/games/${userQuestionSnapshot.val().uid}/answeredUserQuestions/${userQuestionSnapshot.key}`] = true;
 
-        let currentUserQuestionPromise = Promise.resolve(false);
+        let currentUserQuestionPromise = Promise.resolve(null);
 
         if (!answer.correct) {
             updates[`/games/${userQuestionSnapshot.val().uid}/state`] = 'FINISHED';
-            // updates[`/games/${userQuestionSnapshot.val().uid}/currentUserQuestion`] = false;
         } else {
             currentUserQuestionPromise = new Promise(function(resolve) {
                 gamesRef.child(`${userQuestionSnapshot.val().uid}`).once('value', function(gameSnapshot) {
@@ -163,14 +162,19 @@ function handleUserQuestionAnswer(userQuestionSnapshot) {
                     if (indexOfCurrentUserQuestion < userQuestionsArray.length - 1) {
                         resolve(userQuestionsArray[indexOfCurrentUserQuestion + 1]);
                     } else {
-                        resolve(false);
+                        resolve('LAST_QUESTION');
                     }
                 });
             });
         }
 
         currentUserQuestionPromise.then(function(currentUserQuestion) {
-            updates[`/games/${userQuestionSnapshot.val().uid}/currentUserQuestion`] = currentUserQuestion;
+            if (currentUserQuestion === 'LAST_QUESTION') {
+                updates[`/games/${userQuestionSnapshot.val().uid}/state`] = 'FINISHED';
+                updates[`/games/${userQuestionSnapshot.val().uid}/currentUserQuestion`] = null;
+            } else {
+                updates[`/games/${userQuestionSnapshot.val().uid}/currentUserQuestion`] = currentUserQuestion;
+            }
             db.ref().update(updates, function() {
                 updateQuestionData(userQuestionSnapshot.val().question, userQuestionSnapshot.key);
             });
