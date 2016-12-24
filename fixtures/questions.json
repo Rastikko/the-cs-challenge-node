@@ -1,6 +1,6 @@
 [
   {
-    "title": "If an array based list starts out with a capacity of 8 and has a double the capacity growth policy, what is the capacity of the list after 24 elemetns have been added to it.",
+    "title": "If an array based list starts out with a capacity of 8 and has a double the capacity growth policy, what is the capacity of the list after 24 elements have been added to it.",
     "answers": [
       { "title": "16", "correct": false },
       { "title": "24", "correct": false },

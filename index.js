@@ -13,6 +13,20 @@ const oldGamesRef = db.ref("oldGames");
 const questionsRef = db.ref("questions");
 const answersRef = db.ref("answers");
 const userQuestionsRef = db.ref("userQuestions");
+const scoresRef = db.ref("scores");
+
+/**
+ * Randomize array element order in-place.
+ * Using Durstenfeld shuffle algorithm.
+ */
+function shuffleArray(array) {
+    for (var i = array.length - 1; i > 0; i--) {
+        var j = Math.floor(Math.random() * (i + 1));
+        var temp = array[i];
+        array[i] = array[j];
+        array[j] = temp;
+    }
+}
 
 /**
  * Retrieve data
@@ -21,7 +35,9 @@ function getQuestionsKeys() {
     return new Promise(function(resolve) {
         questionsRef.once('value', function(snapshot) {
             // TODO: Pick some random instead of all
-            resolve(Object.keys(snapshot.val()));
+            let keysArray = Object.keys(snapshot.val());
+            shuffleArray(keysArray);
+            resolve(keysArray);
         });
     });
 }
@@ -51,6 +67,15 @@ function createUserQuestions(questionKeys, uid) {
     return { updates, userQuestionKeys };
 }
 
+function getUserQuestionsDataPromises(userQuestionsKeys) {
+    userQuestionsDataPromises = [];
+    userQuestionsKeys.forEach(function(userQuestionKey) {
+        userQuestionsDataPromises.push(userQuestionsRef.child(userQuestionKey).once('value'));
+    });
+
+    return userQuestionsDataPromises;
+}
+
 function handleNewGame(gameSnapshot) {
     getQuestionsKeys().then(function(questionKeys) {
         let {updates, userQuestionKeys} = createUserQuestions(questionKeys, gameSnapshot.val().uid);
@@ -63,14 +88,42 @@ function handleNewGame(gameSnapshot) {
 
 function handleFinishedGame(gameSnapshot) {
     let finishedTime = new Date();
+    let userQuestionsKeys = Object.keys(gameSnapshot.val().answeredUserQuestions);
+
+    let userQuestionsDataPromises = getUserQuestionsDataPromises(userQuestionsKeys);
+
     gamesRef.child(`${gameSnapshot.key}`).update({
         finishedTime: new Date()
     });
 
-    oldGamesRef.push().set({
-        uid: gameSnapshot.key,
-        answeredUserQuestions: gameSnapshot.val().answeredUserQuestions,
-        gameEndTime: finishedTime
+    Promise.all(userQuestionsDataPromises).then(function(userQuestions) {
+
+        let totalScore = 0;
+
+        userQuestions.forEach(function(snapshot) {
+            if (snapshot.val().score) {
+                totalScore += snapshot.val().score;
+            }
+        });
+
+        let oldGameRef = oldGamesRef.push();
+
+        oldGameRef.set({
+            uid: gameSnapshot.key,
+            answeredUserQuestions: gameSnapshot.val().answeredUserQuestions,
+            gameEndTime: finishedTime
+        });
+
+        scoresRef.push().set({
+            uid: gameSnapshot.key,
+            oldGameId: oldGameRef.key,
+            score: totalScore
+        });
+
+        gamesRef.child(`${gameSnapshot.key}`).update({
+            score: totalScore
+        });
+
     });
 
     // TODO: delete non responded user questions gameSnapshot.val().userQuestions
@@ -81,7 +134,7 @@ function handleGameUpdate(gameSnapshot) {
     if (game.state === 'NEW') {
         return handleNewGame(gameSnapshot);
     }
-    if (game.state === 'FINISHED' && !game.finishedTime) {
+    if (game.state === 'FINISHED' && game.finishedTime === undefined && game.score === undefined) {
         return handleFinishedGame(gameSnapshot);
     }
 }
