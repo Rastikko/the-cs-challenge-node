@@ -1,6 +1,7 @@
 const firebaseAdmin = require("firebase-admin");
-const isHeroku = (process.env.NODE && ~process.env.NODE.indexOf("heroku"));
-const serviceAccount = (isHeroku) ? require("./serviceaccountheroku.js") : require("./serviceaccountkey.json");
+// const isHeroku = (process.env.NODE && ~process.env.NODE.indexOf("heroku"));
+// const serviceAccount = (isHeroku) ? require("./serviceaccountheroku.js") : require("./serviceaccountkey.json");
+const serviceAccount = require("./serviceaccountkey.json");
 
 firebaseAdmin.initializeApp({
   credential: firebaseAdmin.credential.cert(serviceAccount),
