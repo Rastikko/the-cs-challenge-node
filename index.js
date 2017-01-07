@@ -2,6 +2,9 @@ const firebaseAdmin = require("firebase-admin");
 const isHeroku = (process.env.NODE && ~process.env.NODE.indexOf("heroku"));
 const serviceAccount = (isHeroku) ? require("./serviceaccountheroku.js") : require("./serviceaccountkey.json");
 
+console.log('Is heroku: ', isHeroku);
+console.log('ServiceAccount: ', serviceAccount);
+
 firebaseAdmin.initializeApp({
   credential: firebaseAdmin.credential.cert(serviceAccount),
   databaseURL: "https://the-cs-challenge.firebaseio.com"
