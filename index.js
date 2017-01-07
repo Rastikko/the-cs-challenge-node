@@ -265,7 +265,6 @@ userQuestionsRef.on('child_added', handleUserQuestionsUpdates);
 userQuestionsRef.on('child_changed', handleUserQuestionsUpdates);
 
 /* for heroku only */
-console.log('Is heroku: ', isHeroku);
 console.log('ServiceAccount: ', serviceAccount);
 console.log('gamesRef: ', gamesRef);
 
