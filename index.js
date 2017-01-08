@@ -1,7 +1,6 @@
 const firebaseAdmin = require("firebase-admin");
-// const isHeroku = (process.env.NODE && ~process.env.NODE.indexOf("heroku"));
-// const serviceAccount = (isHeroku) ? require("./serviceaccountheroku.js") : require("./serviceaccountkey.json");
-const serviceAccount = require("./serviceaccountkey.json");
+const isHeroku = (process.env.NODE && ~process.env.NODE.indexOf("heroku"));
+const serviceAccount = (isHeroku) ? require("./serviceaccountheroku.js") : require("./serviceaccountkey.json");
 
 firebaseAdmin.initializeApp({
   credential: firebaseAdmin.credential.cert(serviceAccount),
@@ -267,6 +266,7 @@ userQuestionsRef.on('child_changed', handleUserQuestionsUpdates);
 /* for heroku only */
 console.log('ServiceAccount: ', serviceAccount);
 console.log('gamesRef: ', gamesRef);
+console.log('process.env.NODE: ', process.env.NODE);
 
 const http = require('http');
 const PORT = process.env.PORT || 8080; 
