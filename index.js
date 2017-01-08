@@ -265,7 +265,6 @@ userQuestionsRef.on('child_changed', handleUserQuestionsUpdates);
 
 /* for heroku only */
 console.log('ServiceAccount: ', serviceAccount);
-console.log('gamesRef: ', gamesRef);
 console.log('process.env.NODE: ', process.env.NODE);
 
 const http = require('http');
